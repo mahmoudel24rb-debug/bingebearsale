@@ -1,0 +1,179 @@
+# BingeBear — static Vite SPA on Hostinger with WordPress co-existing underneath.
+# This .htaccess is uploaded to the document root and must preserve every
+# WordPress path so /wp-admin, /wp-json, /wp-content, /wp-includes, and the
+# Rank Math sitemap keep working after the new homepage goes live.
+
+Options -MultiViews +FollowSymLinks
+
+# Hostinger can default .js to application/x-javascript. ES module scripts
+# are strict about MIME type, especially with X-Content-Type-Options: nosniff.
+AddType application/javascript .js .mjs
+AddType text/css .css
+
+# Force the static SPA shell to win over WordPress's index.php for /
+DirectoryIndex index.html index.php
+
+# ---------------------------------------------------------------
+# Security + compression headers (replaces WP Snippet 58 v3 on
+# static routes — WP still serves its own headers via PHP hooks)
+# ---------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  # Conservative CSP: forces HTTPS, blocks clickjacking, blocks Flash/plugins,
+  # locks <base> to self. Avoids script-src / style-src restrictions so the
+  # third-party tags (Stripe, Clarity, Facebook Pixel, TikTok, GTM) keep working.
+  Header always set Content-Security-Policy "upgrade-insecure-requests; frame-ancestors 'self' https://bingebear.tv; object-src 'none'; base-uri 'self'"
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpg "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType image/x-icon "access plus 1 year"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType text/javascript "access plus 1 month"
+  ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+# Long-cache hashed Vite assets — safe because filenames change per build
+<IfModule mod_headers.c>
+  <FilesMatch "\.html?$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+    # Hostinger runs LiteSpeed: without this, LSCache ignores the
+    # Cache-Control above and serves stale HTML (observed max-age=1800
+    # responses overriding the SPA shell after deploys). This header is
+    # consumed by LiteSpeed and stripped from the response.
+    Header set X-LiteSpeed-Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "\.(?:css|js|woff2|jpg|jpeg|png|webp|svg|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# Belt and braces for the LiteSpeed page cache: never cache the SPA shell.
+<IfModule LiteSpeed>
+  CacheDisable public /index.html
+</IfModule>
+
+# ---------------------------------------------------------------
+# Routing
+# ---------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Canonical host: Rank Math expects www and non-www to resolve to one URL.
+  RewriteCond %{HTTP_HOST} ^www\.bingebear\.tv$ [NC]
+  RewriteRule ^ https://bingebear.tv%{REQUEST_URI} [L,R=301]
+
+  # Force HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # ----- Trial page: served by Vite, not WordPress -----
+  # Legacy WP slug -> permanent redirect to the new canonical URL
+  RewriteRule ^iptv-free-trial-ireland-2026-3/?$ /trial/ [L,R=301]
+  # Bare /trial -> /trial/ (canonical with slash)
+  RewriteRule ^trial$ /trial/ [L,R=301]
+  # /trial/ serves the static Vite-built index. Apache's DirectoryIndex picks it.
+
+  # ----- Locale auto-redirect (FR/BE -> /fr/...) -----
+  # Auto-detect French speakers / French + Belgian IPs on first visit and
+  # send them to the French homepage / trial / pricing equivalents.
+  # Only fires when bb_lang cookie is unset (= user has not explicitly chosen).
+  # Uses Cloudflare's CF-IPCountry header (CF proxies bingebear.tv) and the
+  # browser's Accept-Language as a fallback.
+  # Ad URLs win: if a campaign query is present, keep the advertiser's target URL.
+  RewriteCond %{REQUEST_URI} ^/(trial/|pricing/)?$
+  RewriteCond %{QUERY_STRING} !(^|&)(utm_|gclid=|fbclid=|msclkid=|ttclid=) [NC]
+  RewriteCond %{HTTP_COOKIE} bb_lang=fr [NC]
+  RewriteRule ^(.*)$ /fr/$1 [R=302,L]
+
+  RewriteCond %{REQUEST_URI} ^/(trial/|pricing/)?$
+  RewriteCond %{QUERY_STRING} !(^|&)(utm_|gclid=|fbclid=|msclkid=|ttclid=) [NC]
+  RewriteCond %{HTTP_COOKIE} !bb_lang= [NC]
+  RewriteCond %{HTTP:CF-IPCountry} ^(FR|BE)$ [OR]
+  RewriteCond %{HTTP:Accept-Language} ^fr [NC]
+  RewriteRule ^(.*)$ /fr/$1 [R=302,L]
+
+  # Mirror: if a visitor explicitly chose EN but lands on /fr/<funnel>/, send them home.
+  RewriteCond %{REQUEST_URI} ^/fr/(trial/|pricing/)?$
+  RewriteCond %{QUERY_STRING} !(^|&)(utm_|gclid=|fbclid=|msclkid=|ttclid=) [NC]
+  RewriteCond %{HTTP_COOKIE} bb_lang=en [NC]
+  RewriteRule ^fr/(.*)$ /$1 [R=302,L]
+
+  # Bare /fr -> /fr/ (canonical with slash)
+  RewriteRule ^fr$ /fr/ [L,R=301]
+  RewriteRule ^fr/trial$ /fr/trial/ [L,R=301]
+  RewriteRule ^fr/pricing$ /fr/pricing/ [L,R=301]
+
+  # Keep WordPress alive: anything that hits /wp-admin, /wp-json, /wp-content,
+  # /wp-includes goes straight to WordPress.
+  RewriteRule ^wp-admin(/.*)?$ - [L]
+  RewriteRule ^wp-json(/.*)?$ /index.php [L]
+  RewriteRule ^wp-content(/.*)?$ - [L]
+  RewriteRule ^wp-includes(/.*)?$ - [L]
+  RewriteRule ^wp-login\.php$ - [L]
+  RewriteRule ^wp-cron\.php$ - [L]
+  # Rank Math sitemap routes retired 2026-05-24 — plugin deactivated, no posts left.
+  # 301 the legacy sitemap_index.xml + WP core sitemaps to the live Vite sitemap.
+  RewriteRule ^sitemap_index\.xml$ /sitemap.xml [L,R=301]
+  RewriteRule ^wp-sitemap.*\.xml$ /sitemap.xml [L,R=301]
+  RewriteRule ^xmlrpc\.php$ - [L]
+
+  # ----- 301 redirects for deleted WP hub pages (preserve Google traffic) -----
+  # These pages were deleted from WP after the Vite cutover. Anyone arriving
+  # from a Google result or external link is redirected to the closest live
+  # equivalent on the Vite site. MUST run before the real-file bypass so
+  # stale leftover folders on the live server don't shadow the redirect.
+  RewriteRule ^support/?$            https://wa.link/arhdnf [L,R=301]
+  RewriteRule ^report-issue/?$       https://wa.link/arhdnf [L,R=301]
+  RewriteRule ^contact/?$            /trial/                [L,R=301]
+  RewriteRule ^about/?$              /                      [L,R=301]
+  RewriteRule ^about-us/?$           /                      [L,R=301]
+  RewriteRule ^channels-list/?$      /library/channels/     [L,R=301]
+  RewriteRule ^whats-on-tonight/?$   /whats-on/             [L,R=301]
+
+  # Don't touch real files/dirs (Vite hashed assets, public/* files, /trial/, etc.)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # ----- WordPress reserved paths -----
+  # Only the trial-form iframe target + WP-native taxonomy/feed/search paths.
+  # All 4 legal pages, plus /help-center/ and /setup-guides/, are now Vite
+  # static HTML (RichContentPage) and are served by the real-file check above.
+  RewriteRule ^(trial-form|category|tag|author|feed|comments|search)(/.*)?$ /index.php [L]
+
+  # ----- Vite dynamic library routes -----
+  # These client-rendered routes may be shared without a trailing slash.
+  RewriteRule ^library/title/[^/]+/[^/]+$ /index.html [L]
+  RewriteRule ^library/(channels|films|series)/[^/]+$ /index.html [L]
+
+  # ----- Vite SPA fallback -----
+  # Everything else with a trailing slash — /blog/, /blog/{slug}/, root-level
+  # blog slugs like /cancel-sky-ireland-2026-hub/, and NavSeoPages like /pricing/,
+  # /whats-on/, /films/ — goes to the Vite SPA shell. React Router resolves the
+  # route client-side from window.location.
+  RewriteCond %{REQUEST_URI} /$
+  RewriteRule ^ /index.html [L]
+
+  # No trailing slash, no real file, no WP match → 404
+  RewriteRule ^ /404.html [L,R=404]
+</IfModule>
+
+ErrorDocument 404 /404.html

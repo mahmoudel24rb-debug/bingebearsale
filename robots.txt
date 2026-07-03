@@ -1,0 +1,123 @@
+# BingeBear.tv — robots policy
+# Allow Google + Bing + AI engines (ChatGPT, Claude, Gemini, Copilot,
+# Perplexity, You, DuckAssist, Apple Intelligence, Meta AI, Mistral)
+# to crawl, train, cite, and link back. Block sensitive WP paths only.
+
+# ---------------------------------------------------------------
+# Default policy: open to all standard search crawlers
+# ---------------------------------------------------------------
+User-agent: *
+Allow: /
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /xmlrpc.php
+Disallow: /?s=
+Disallow: /search/
+Allow: /wp-admin/admin-ajax.php
+
+# ---------------------------------------------------------------
+# AI bot allowlist — explicit so each LLM provider knows it can
+# crawl, cite, and surface BingeBear in answers. Order: training
+# crawlers first, then user-triggered live fetchers, then search.
+# ---------------------------------------------------------------
+
+# OpenAI (ChatGPT, SearchGPT, Operator)
+User-agent: GPTBot
+Allow: /
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /xmlrpc.php
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic (Claude)
+User-agent: ClaudeBot
+Allow: /
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /wp-admin/
+
+User-agent: claude-searchbot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Google (Gemini, AI Overviews, Bard legacy)
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: GoogleOther-Image
+Allow: /
+
+# Microsoft (Copilot, Bing Chat)
+User-agent: bingbot
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+Disallow: /wp-admin/
+
+User-agent: Perplexity-User
+Allow: /
+
+# Apple Intelligence + Siri
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# DuckDuckGo AI
+User-agent: DuckAssistBot
+Allow: /
+
+# Meta AI
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# Mistral
+User-agent: MistralAI-User
+Allow: /
+
+# You.com
+User-agent: YouBot
+Allow: /
+
+# Cohere
+User-agent: cohere-ai
+Allow: /
+
+# Common Crawl (feeds many open-source LLMs)
+User-agent: CCBot
+Allow: /
+
+# Diffbot (knowledge graph, used by some AI engines)
+User-agent: Diffbot
+Allow: /
+
+# Amazonbot (Alexa, Q Business)
+User-agent: Amazonbot
+Allow: /
+
+# ---------------------------------------------------------------
+# Sitemaps — both the static Vite sitemap and Rank Math's index
+# ---------------------------------------------------------------
+Sitemap: https://bingebear.tv/sitemap.xml
+Sitemap: https://bingebear.tv/sitemap_index.xml

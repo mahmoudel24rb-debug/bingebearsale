@@ -1,0 +1,298 @@
+/* Single global BingeBear header — Lumio homepage style, version 2026-07-02-lumio-header.
+   A slim glass bar (logo · nav · WhatsApp · Start the free trial) that adapts its
+   tone (dark on dark pages, light on light pages) via data-bb-header-tone, which
+   bb-mega-header.js sets from the background behind the header. */
+
+html {
+  scroll-padding-top: 84px !important;
+}
+
+/* Reserve exactly the header's height (67px desktop nav + 1px hairline) so the
+   page background starts flush under the glass bar — no decorative-gradient band
+   showing in a gap between the header and the content. */
+body.bb-mega-header-mounted,
+html.bb-mega-header-pending body {
+  padding-top: 67px !important;
+}
+
+body.bb-mega-header-mounted.bb-mega-header-overlap {
+  padding-top: 0 !important;
+}
+
+/* Hide any legacy/alternative headers so only this one shows. */
+html.bb-mega-header-pending :is(.bb-hd, .bb-global-header-static, .header-tod, .mp-header, .site-header, #site-header, .oxy-header-wrapper, .bb-lumio-shell__header, .bb-site-header, [data-bb-header='true'], #nav, .nav__drawer, #navDrawer, .bb-shell-fallback__nav),
+body.bb-mega-header-mounted :is(.bb-hd, .bb-global-header-static, .header-tod, .mp-header, .site-header, #site-header, .oxy-header-wrapper, .bb-lumio-shell__header, .bb-site-header, [data-bb-header='true'], #nav, .nav__drawer, #navDrawer, .bb-shell-fallback__nav) {
+  display: none !important;
+}
+
+.bb-mega-site-header,
+.bb-mega-site-header *,
+.bb-mega-site-header *::before,
+.bb-mega-site-header *::after {
+  box-sizing: border-box;
+}
+
+.bb-mega-site-header {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483000;
+  display: block;
+  color: #fff;
+  /* Liquid glass: translucent + blur so content flows under the bar with no seam. */
+  background: rgba(6, 18, 38, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: saturate(1.5) blur(22px);
+  backdrop-filter: saturate(1.5) blur(22px);
+  box-shadow: 0 12px 34px rgba(3, 9, 21, 0.2);
+  font-family: 'Inter Tight', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.bb-mega-header__nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 40px);
+  width: 100%;
+  max-width: 1320px;
+  min-height: 66px;
+  margin: 0 auto;
+  padding: 12px clamp(18px, 3.4vw, 50px);
+}
+
+.bb-mega-header__logo {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.bb-mega-header__logo img {
+  width: auto;
+  height: 36px;
+  max-width: 200px;
+  display: block;
+}
+
+.bb-mega-header__links {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.1vw, 34px);
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.bb-mega-header__item {
+  list-style: none;
+}
+
+.bb-mega-header__link {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.bb-mega-header__link:hover {
+  color: #fff;
+}
+
+.bb-mega-header__actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.6vw, 24px);
+  flex: none;
+  margin-left: 0;
+}
+
+.bb-mega-header__whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: clamp(12px, 0.94vw, 14px);
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.bb-mega-header__whatsapp:hover {
+  color: #fff;
+}
+
+.bb-mega-wa-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #25d366;
+  box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.22);
+  flex: none;
+}
+
+.bb-mega-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 11px 22px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #15191a;
+  font-size: clamp(14px, 1vw, 15px);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease,
+    color 0.2s ease;
+}
+
+.bb-mega-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.bb-mega-cta__icon {
+  display: inline-flex;
+}
+
+.bb-mega-cta__icon svg {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+/* On light pages the JS turns the bar white, so the white CTA needs to flip
+   dark to stay visible. */
+.bb-mega-site-header[data-bb-header-tone='light'] .bb-mega-cta {
+  background: #15171a;
+  color: #ffffff;
+}
+
+.bb-mega-site-header[data-bb-header-tone='light'] .bb-mega-cta:hover {
+  background: #2c2f33;
+}
+
+.bb-mega-mobile-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+}
+
+.bb-mega-mobile-panel {
+  display: none;
+}
+
+.bb-mega-mobile-panel__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px clamp(18px, 5vw, 28px) 20px;
+}
+
+.bb-mega-mobile-panel__inner > a {
+  padding: 13px 4px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bb-mega-mobile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.bb-mega-mobile-actions .bb-mega-header__whatsapp {
+  justify-content: center;
+  padding: 12px;
+}
+
+.bb-mega-mobile-actions .bb-mega-cta {
+  justify-content: center;
+  width: 100%;
+}
+
+/* Light-tone mobile surfaces. */
+.bb-mega-site-header[data-bb-header-tone='light'] .bb-mega-mobile-panel__inner > a {
+  color: rgba(6, 18, 38, 0.86);
+  border-bottom-color: rgba(6, 18, 38, 0.08);
+}
+
+.bb-mega-header__link:focus-visible,
+.bb-mega-header__whatsapp:focus-visible,
+.bb-mega-cta:focus-visible,
+.bb-mega-header__logo:focus-visible,
+.bb-mega-mobile-toggle:focus-visible {
+  outline: 2px solid #7fb7f2;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+  html {
+    scroll-padding-top: 72px !important;
+  }
+
+  body.bb-mega-header-mounted,
+  html.bb-mega-header-pending body {
+    padding-top: 59px !important;
+  }
+
+  body.bb-mega-header-mounted.bb-mega-header-overlap {
+    padding-top: 0 !important;
+  }
+
+  .bb-mega-header__nav {
+    min-height: 58px;
+    padding: 10px clamp(16px, 5vw, 24px);
+  }
+
+  .bb-mega-header__logo img {
+    height: 30px;
+    max-width: 168px;
+  }
+
+  .bb-mega-header__links,
+  .bb-mega-header__actions .bb-mega-header__whatsapp,
+  .bb-mega-header__actions .bb-mega-cta {
+    display: none;
+  }
+
+  .bb-mega-header__actions {
+    margin-left: auto;
+  }
+
+  .bb-mega-mobile-toggle {
+    display: inline-flex;
+  }
+
+  .is-mobile-open .bb-mega-mobile-panel {
+    display: block;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    background: inherit;
+  }
+}
